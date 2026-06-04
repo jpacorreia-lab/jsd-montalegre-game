@@ -145,13 +145,13 @@ canvas{display:block;width:100%;}
     <canvas id="c-final" width="200" height="170" style="margin:8px 0;"></canvas>
     <div class="final-msg" id="f-msg"></div>
     <div class="saldo">
-      <div class="saldo-ttl">O SALDO DE MONTALEGRE · 2026</div>
+      <div class="saldo-ttl">O SALDO DE MONTALEGRE · INE 2024</div>
+      <div class="saldo-item"><span>Nascimentos em 2024</span><span class="saldo-val">29</span></div>
+      <div class="saldo-item"><span>Óbitos em 2024</span><span class="saldo-val">177</span></div>
+      <div class="saldo-item"><span>Saldo natural</span><span class="saldo-val">-148</span></div>
+      <div class="saldo-item"><span>Índice de envelhecimento</span><span class="saldo-val">550,6</span></div>
       <div class="saldo-item"><span>Parque aquático prometido</span><span class="saldo-val">NÃO EXISTE</span></div>
-      <div class="saldo-item"><span>Rio Cávado requalificado</span><span class="saldo-val">NÃO</span></div>
-      <div class="saldo-item"><span>Jovens (15-29 anos)</span><span class="saldo-val">MENOS DE 10%</span></div>
-      <div class="saldo-item"><span>Índice de envelhecimento</span><span class="saldo-val">TOP 5 NACIONAL</span></div>
       <div class="saldo-item"><span>EN103 requalificada</span><span class="saldo-val">NÃO</span></div>
-      <div class="saldo-item"><span>Aldeias sem rede móvel</span><span class="saldo-val">DEZENAS</span></div>
     </div>
     <div class="share-box">
       <div class="share-ttl">PARTILHA COM OS TEUS AMIGOS</div>
@@ -478,14 +478,16 @@ function bgCena(c,id,t){
     c.beginPath();c.moveTo(-18,0);c.lineTo(0,14);c.lineTo(0,0);c.closePath();c.fillStyle='#c05000';c.fill();
     c.beginPath();c.moveTo(18,0);c.lineTo(0,14);c.lineTo(0,0);c.closePath();c.fillStyle=JSD.or;c.fill();
     c.restore();
-    /* contador de habitantes a descer */
-    c.beginPath();c.roundRect(452,48,118,60,8);c.fillStyle='rgba(0,0,0,.7)';c.fill();
-    c.fillStyle=JSD.am;c.font='bold 9px Bebas Neue,cursive';c.textAlign='center';
-    c.fillText('HABITANTES · 2026',511,64);
-    c.fillStyle=JSD.red;c.font='bold 26px Bebas Neue,cursive';
-    c.fillText('11',511,90);
-    c.fillStyle='rgba(255,255,255,.6)';c.font='7px Nunito,sans-serif';
-    c.fillText('(média de idades: 74 anos)',511,104);
+    /* contador dados reais INE */
+    c.beginPath();c.roundRect(440,38,148,76,8);c.fillStyle='rgba(0,0,0,.75)';c.fill();
+    c.fillStyle=JSD.am;c.font='bold 8px Bebas Neue,cursive';c.textAlign='center';
+    c.fillText('MONTALEGRE · 2024 · INE',514,54);
+    c.fillStyle=JSD.red;c.font='bold 9px Nunito,sans-serif';
+    c.fillText('Nascimentos:',514,68);
+    c.fillStyle=JSD.wh;c.font='bold 28px Bebas Neue,cursive';
+    c.fillText('29',514,94);
+    c.fillStyle='rgba(255,255,255,.65)';c.font='7.5px Nunito,sans-serif';
+    c.fillText('177 óbitos · saldo: -148',514,108);
     /* idosos na plateia */
     [[88,152],[522,150],[556,148]].forEach(([hx,hy],i)=>{
       c.beginPath();c.arc(hx,hy-20,13,0,PI*2);c.fillStyle=JSD.skin;c.fill();
@@ -523,7 +525,7 @@ function bgCena(c,id,t){
     c.fillStyle=JSD.ci;c.font='bold 9px Nunito,sans-serif';c.textAlign='center';
     c.fillText('PRÉMIO MUNICIPAL DE EXCELÊNCIA · 2026',299,32);
     /* balões de dados reais */
-    [[58,58,'Jovens','< 10%'],[510,58,'Envelhecimento','Top 5 PT']].forEach(([bx,by,lbl,val])=>{
+    [[58,58,'Nascimentos','29 em 2024'],[510,58,'Envelhecimento','550,6']].forEach(([bx,by,lbl,val])=>{
       c.beginPath();c.roundRect(bx-44,by-16,88,50,8);c.fillStyle='rgba(0,0,0,.5)';c.fill();
       c.fillStyle='rgba(255,255,255,.7)';c.font='7px Nunito,sans-serif';c.textAlign='center';
       c.fillText(lbl,bx,by+2);
@@ -647,17 +649,17 @@ const SCENES=[
    no:'A EN103 está degradada há anos. O tapete de flores dura três dias. Os buracos duram o ano todo. A autarquia pode pressionar o Estado — nunca o fez com a energia certa.'},
 
   {id:4,
-   title:'O Salão da Aldeia que Desaparece',
-   placa:'INAUGURAÇÃO OFICIAL — SALÃO POLIVALENTE · ALDEIA DO SOUTO · 2026',
-   frase:'"Este salão é um investimento no futuro desta aldeia! Acreditamos em cada comunidade de Montalegre! Esta obra é para todos!"',
-   q:'O que falta verdadeiramente nas aldeias do interior de Montalegre em 2026?',
+   title:'O Salão para Quem Já Não Está',
+   placa:'INAUGURAÇÃO OFICIAL — SALÃO POLIVALENTE · MONTALEGRE · 2024',
+   frase:'"Este salão é um investimento no futuro das nossas comunidades! Acreditamos em cada aldeia de Montalegre! Esta obra é para todos!"',
+   q:'Quantos bebés nasceram em todo o concelho de Montalegre em 2024?',
    choices:[
-     {t:'Salões polivalentes e espaços de lazer',c:false},
-     {t:'Internet, rede de telemóvel e jovens que queiram e possam ficar',c:true},
-     {t:'Mais festas e eventos culturais ao longo do ano',c:false}
+     {t:'Entre 80 a 100 — um número preocupante mas estável',c:false},
+     {t:'Entre 40 a 60 — abaixo da média mas dentro do esperado',c:false},
+     {t:'29 — contra 177 óbitos. Saldo natural de -148 num único ano.',c:true}
    ],
-   ok:'Correto. As aldeias do interior têm salões. O que não têm é internet estável, cobertura de rede móvel e razões económicas para os jovens não emigrarem. Em 2026 a aldeia do Souto tem 11 habitantes, com média de idades de 74 anos.',
-   no:'As aldeias de Montalegre têm salões inaugurados. O que não têm é internet estável, rede móvel e emprego para quem quer ficar. Inaugurar salões é mais fotogénico do que resolver a conectividade digital.'},
+   ok:'Correto. Fonte: INE, dezembro 2025. Em 2024 nasceram 29 crianças em todo o concelho. Morreram 177 pessoas. O salão inaugurado tem capacidade para mais gente do que nasceu em Montalegre nesse ano. Isto é o futuro de que a autarquia fala.',
+   no:'Em 2024 nasceram 29 crianças em todo o concelho de Montalegre. Morreram 177 pessoas. Saldo natural: -148. Fonte: INE, dezembro 2025. O futuro prometido nas inaugurações não aparece nos registos de nascimento.'},
 
   {id:5,
    title:'Muitos Milhões, Mesmos Resultados',
