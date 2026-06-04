@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Presidente em Festa — JSD Montalegre</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:#fff9f4;overflow-x:hidden;}
+canvas{display:block;}
+
+#game-wrap{max-width:640px;margin:0 auto;}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;align-items:center;padding:16px;}
+.screen.active{display:flex;}
+
+#screen-intro{min-height:100vh;justify-content:center;background:linear-gradient(150deg,#001f4d,#003b7a,#005bb5);position:relative;overflow:hidden;text-align:center;}
+#screen-intro::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 80%,rgba(244,121,32,.4) 0%,transparent 55%);}
+.intro-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;}
+.jsd-tag{background:#f47920;color:#fff;font-family:'Fredoka One',cursive;font-size:.8rem;padding:4px 14px;border-radius:20px;letter-spacing:1px;margin-bottom:12px;}
+.big-title{font-family:'Fredoka One',cursive;font-size:clamp(2rem,7vw,3.4rem);color:#fff;line-height:1.1;text-shadow:2px 2px 0 rgba(0,0,0,.3);}
+.big-title span{color:#f47920;}
+.sub{color:rgba(255,255,255,.65);font-size:.88rem;margin:8px 0 22px;}
+#intro-canvas{border-radius:16px;}
+
+/* SCENE */
+#screen-scene{padding:12px;}
+.hud{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.hud-label{font-family:'Fredoka One',cursive;font-size:.82rem;color:#003b7a;background:rgba(0,59,122,.1);padding:3px 12px;border-radius:20px;}
+.hud-score{font-family:'Fredoka One',cursive;font-size:.95rem;color:#f47920;}
+.pbar-wrap{width:100%;max-width:640px;height:5px;background:#e0e0e0;border-radius:3px;margin-bottom:10px;}
+.pbar-fill{height:100%;background:#f47920;border-radius:3px;transition:width .4s;}
+.scene-card{width:100%;max-width:640px;background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,.08);overflow:hidden;}
+#scene-canvas{display:block;width:100%;}
+.scene-body{padding:14px 16px;}
+.scene-title{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#003b7a;margin-bottom:5px;}
+.bubble{background:rgba(244,121,32,.1);border-left:4px solid #f47920;border-radius:0 10px 10px 0;padding:8px 12px;font-size:.86rem;color:#333;margin-bottom:8px;line-height:1.5;font-style:italic;}
+.source{display:inline-block;background:rgba(0,59,122,.07);border:1px solid rgba(0,59,122,.18);border-radius:20px;padding:2px 10px;font-size:.72rem;color:#003b7a;font-weight:700;margin-bottom:10px;}
+.choices{display:flex;flex-direction:column;gap:7px;}
+.choice{padding:10px 13px;border-radius:10px;border:2px solid #e0e0e0;background:#fff;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.87rem;text-align:left;transition:all .18s;color:#4a4e69;}
+.choice:hover{border-color:#f47920;background:rgba(244,121,32,.05);transform:translateX(3px);}
+.choice.ok{border-color:#2d6a4f;background:rgba(45,106,79,.08);color:#2d6a4f;font-weight:700;}
+.choice.no{border-color:#c1121f;background:rgba(193,18,31,.06);color:#c1121f;font-weight:700;}
+.choice:disabled{cursor:default;transform:none;}
+.feedback{margin-top:10px;padding:10px 13px;border-radius:10px;font-size:.85rem;line-height:1.5;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:rgba(45,106,79,.08);color:#2d6a4f;border-left:4px solid #2d6a4f;}
+.feedback.no{background:rgba(193,18,31,.06);color:#c1121f;border-left:4px solid #c1121f;}
+.next-wrap{text-align:right;margin-top:10px;}
+
+/* FINAL */
+#screen-final{min-height:100vh;justify-content:center;text-align:center;background:linear-gradient(150deg,#001f4d,#003b7a,#005bb5);}
+.final-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;max-width:460px;}
+.final-tag{font-family:'Fredoka One',cursive;color:#f47920;font-size:.8rem;letter-spacing:1px;margin-bottom:6px;}
+.final-title{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,5vw,2.2rem);color:#fff;line-height:1.2;margin-bottom:8px;}
+.final-pts{font-family:'Fredoka One',cursive;font-size:clamp(3rem,12vw,5.5rem);color:#f47920;line-height:1;}
+.final-sub{color:rgba(255,255,255,.55);font-size:.88rem;margin-bottom:12px;}
+.final-msg{background:rgba(255,255,255,.1);border-radius:12px;padding:12px 16px;color:rgba(255,255,255,.9);font-size:.87rem;max-width:420px;line-height:1.6;margin-bottom:16px;}
+.share-box{background:rgba(244,121,32,.14);border:1px solid rgba(244,121,32,.35);border-radius:12px;padding:12px 16px;max-width:420px;width:100%;margin-bottom:16px;}
+.share-ttl{font-family:'Fredoka One',cursive;color:#f47920;margin-bottom:7px;font-size:.92rem;}
+.share-preview{color:rgba(255,255,255,.75);font-size:.8rem;line-height:1.4;margin-bottom:9px;font-style:italic;}
+.share-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* BUTTONS */
+.btn{display:inline-block;padding:11px 28px;border-radius:50px;border:none;cursor:pointer;font-family:'Fredoka One',cursive;font-size:1.05rem;transition:transform .15s,box-shadow .15s;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.25);}
+.btn:active{transform:translateY(0);}
+.btn-or{background:#f47920;color:#fff;}
+.btn-az{background:#003b7a;color:#fff;}
+.btn-wh{background:#fff;color:#003b7a;border:2px solid #003b7a;}
+.btn-sm{padding:8px 18px;font-size:.92rem;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#003b7a;color:#fff;padding:8px 20px;border-radius:26px;font-family:'Fredoka One',cursive;font-size:.9rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="game-wrap">
+<div class="toast" id="toast">Copiado!</div>
+
+<!-- INTRO -->
+<div id="screen-intro" class="screen active">
+  <div class="intro-inner">
+    <div class="jsd-tag">JSD MONTALEGRE</div>
+    <div class="big-title">A Presidente<br>em <span>Festa</span></div>
+    <div class="sub">9 perguntas sobre a realidade do concelho</div>
+    <canvas id="intro-canvas" width="320" height="240"></canvas>
+    <div class="sub" style="margin-top:8px;font-size:.78rem;">A Presidente adora uma festa. Mas sabe ela o que se passa mesmo no concelho?</div>
+    <button class="btn btn-or" style="margin-top:16px;" onclick="startGame()">Jogar agora</button>
+  </div>
+</div>
+
+<!-- SCENE -->
+<div id="screen-scene" class="screen">
+  <div class="hud">
+    <span class="hud-label" id="hud-label">Cena 1 / 9</span>
+    <span class="hud-score" id="hud-score">0 pts</span>
+  </div>
+  <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+  <div class="scene-card" id="scene-card">
+    <canvas id="scene-canvas" width="640" height="220"></canvas>
+    <div class="scene-body">
+      <div class="scene-title" id="scene-title"></div>
+      <div class="bubble" id="bubble"></div>
+      <div class="source" id="source"></div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="next-wrap" id="next-wrap" style="display:none">
+        <button class="btn btn-az btn-sm" onclick="nextScene()">Próxima →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="screen-final" class="screen">
+  <div class="final-inner">
+    <div class="final-tag">JSD MONTALEGRE</div>
+    <div class="final-title" id="final-title"></div>
+    <div class="final-pts" id="final-pts">0</div>
+    <div class="final-sub">pontos em 90</div>
+    <canvas id="final-canvas" width="200" height="180"></canvas>
+    <div class="final-msg" id="final-msg"></div>
+    <div class="share-box">
+      <div class="share-ttl">Partilha este jogo</div>
+      <div class="share-preview" id="share-preview"></div>
+      <div class="share-btns">
+        <button class="btn btn-or btn-sm" onclick="doWhatsApp()">WhatsApp</button>
+        <button class="btn btn-wh btn-sm" onclick="doCopy()">Copiar link</button>
+      </div>
+    </div>
+    <button class="btn btn-az btn-sm" onclick="restartGame()">Jogar de novo</button>
+  </div>
+</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   MOTOR DE ANIMAÇÃO — Canvas 2D com requestAnimationFrame
+═══════════════════════════════════════════════════════ */
+
+const T = (t) => t * Math.PI / 180;
+let raf = null;
+
+/* ── PALETA ── */
+const C = {
+  skin:'#f5cba7', hair:'#3e2723', suit:'#1a237e',
+  white:'#fff', jsdOr:'#f47920', jsdAz:'#003b7a',
+  red:'#c0392b', ground:'rgba(0,0,0,.15)',
+  chestnut:'#5d4037', chestnutShin:'rgba(255,255,255,.3)',
+  wine:'rgba(150,0,0,.55)', wineRim:'rgba(255,255,255,.5)',
+  ember:'#ff5722', flame1:'#ff6b00', flame2:'#ffd166',
+  confetti:['#e53935','#ffd166','#4caf50','#2196f3','#f47920','#fff'],
+};
+
+/* ── DESENHADOR DE PERSONAGEM ──
+   x,y = centro base dos pés
+   state: { t (tempo), mode }
+   mode: 'idle'|'dance'|'eat'|'drink'|'jump'|'stumble'|'wave'|'nervous'
+*/
+function drawChar(cx2d, x, y, state) {
+  const {t, mode} = state;
+  const s = cx2d;
+
+  /* offsets de animação */
+  let bodyY   = 0;  // translação vertical do corpo
+  let bodyRot = 0;  // rotação do tronco
+  let legLRot = 0;  // perna esquerda
+  let legRRot = 0;  // perna direita
+  let armLRot = -20; // braço esq (default)
+  let armRRot = 20;  // braço dir
+  let headTilt= 0;
+  let eyeState= 'happy'; // 'happy'|'wide'|'flat'|'nervous'
+  let mouthState='smile'; // 'smile'|'open'|'flat'|'worried'
+  let propL   = null; // 'castanha'|'wine'|null
+  let propR   = null; // 'scissors'|'phone'|null
+  let squash  = 1;    // escala Y cabeça (salto)
+  let stretch = 1;    // escala X cabeça
+
+  const sin = Math.sin, cos = Math.cos;
+
+  if (mode === 'dance') {
+    bodyY    = sin(t * 4) * 5;
+    bodyRot  = sin(t * 3) * 8;
+    legLRot  = sin(t * 4) * 20;
+    legRRot  = -sin(t * 4) * 20;
+    armLRot  = -30 + sin(t * 4) * 25;
+    armRRot  = 30 - sin(t * 4) * 25;
+    headTilt = sin(t * 3) * 6;
+    propL = 'wine';
+  }
+  else if (mode === 'eat') {
+    bodyY   = sin(t * 3) * 3;
+    armLRot = -60 + sin(t * 4) * 15;
+    armRRot = 15;
+    headTilt= sin(t * 4) * 8;
+    propL = 'castanha';
+    eyeState= 'happy';
+    mouthState= sin(t * 4) > 0.5 ? 'open' : 'smile';
+  }
+  else if (mode === 'drink') {
+    bodyY   = sin(t * 2) * 2;
+    armLRot = -70 + sin(t * 1.5) * 20;
+    armRRot = 20;
+    headTilt= -15 + sin(t * 1.5) * 10;
+    propL = 'wine';
+    eyeState= sin(t*1.5) > 0.3 ? 'flat' : 'happy';
+  }
+  else if (mode === 'jump') {
+    const phase = (sin(t * 3) + 1) / 2; // 0..1
+    bodyY   = -sin(t * 3) * 22;
+    legLRot = sin(t * 3) * 18;
+    legRRot = -sin(t * 3) * 18;
+    armLRot = -40 - phase * 20;
+    armRRot = 40 + phase * 20;
+    squash  = 1 + phase * .15;
+    stretch = 1 - phase * .08;
+    headTilt= sin(t * 3) * 4;
+    eyeState= 'wide';
+    mouthState= 'open';
+  }
+  else if (mode === 'stumble') {
+    bodyRot  = sin(t * 6) * 12;
+    bodyY    = Math.abs(sin(t * 6)) * 4;
+    legLRot  = sin(t * 6) * 25;
+    legRRot  = -sin(t * 6) * 15;
+    armLRot  = -15 + sin(t * 6) * 30;
+    armRRot  = 20 - sin(t * 6) * 30;
+    headTilt = sin(t * 6) * 10;
+    eyeState = 'wide';
+    mouthState='open';
+  }
+  else if (mode === 'wave') {
+    bodyY   = sin(t * 2) * 3;
+    armLRot = -20;
+    armRRot = -60 + sin(t * 4) * 25;
+    headTilt= sin(t * 3) * 5;
+    propR   = 'wave';
+  }
+  else if (mode === 'nervous') {
+    bodyY   = sin(t * 8) * 2;
+    bodyRot = sin(t * 8) * 4;
+    armLRot = -25 + sin(t * 8) * 5;
+    armRRot = 25 - sin(t * 8) * 5;
+    eyeState= 'nervous';
+    mouthState='worried';
+  }
+  else { // idle / float
+    bodyY   = sin(t * 1.5) * 3;
+    armLRot = -15 + sin(t * 1.5) * 5;
+    armRRot = 15 - sin(t * 1.5) * 5;
+  }
+
+  s.save();
+  s.translate(x, y + bodyY);
+  s.rotate(T(bodyRot));
+
+  /* sombra chão */
+  s.save();
+  s.translate(0, 5 - bodyY);
+  s.scale(1 - Math.abs(bodyY)/80, .3);
+  s.beginPath(); s.arc(0,0,22,0,Math.PI*2);
+  s.fillStyle='rgba(0,0,0,.18)'; s.fill();
+  s.restore();
+
+  /* ── PERNAS ── */
+  function drawLeg(side, rot) {
+    s.save();
+    s.translate(side * 12, 0);
+    s.rotate(T(rot));
+    s.beginPath();
+    s.roundRect(-6, 0, 12, 28, 4);
+    s.fillStyle = C.suit; s.fill();
+    // sapato
+    s.beginPath();
+    s.ellipse(side*2, 30, 10, 5, 0, 0, Math.PI*2);
+    s.fillStyle = '#111'; s.fill();
+    s.restore();
+  }
+  drawLeg(-1, legLRot);
+  drawLeg(1, legRRot);
+
+  /* ── CORPO ── */
+  s.beginPath();
+  s.roundRect(-22, -44, 44, 44, 6);
+  s.fillStyle = C.suit; s.fill();
+  // lapelas
+  s.beginPath(); s.moveTo(0,-42); s.lineTo(-14,-30); s.lineTo(-8,-44); s.closePath();
+  s.fillStyle = C.white; s.fill();
+  s.beginPath(); s.moveTo(0,-42); s.lineTo(14,-30); s.lineTo(8,-44); s.closePath();
+  s.fillStyle = C.white; s.fill();
+  // gravata borboleta JSD
+  s.beginPath();
+  s.moveTo(0,-40); s.lineTo(-6,-34); s.lineTo(0,-36); s.lineTo(6,-34); s.closePath();
+  s.fillStyle = C.jsdOr; s.fill();
+  // crachá
+  s.beginPath(); s.roundRect(-13,-22,26,16,3);
+  s.fillStyle = C.flame2; s.fill();
+  s.fillStyle = '#333'; s.font = 'bold 4px Nunito,sans-serif'; s.textAlign = 'center';
+  s.fillText('PRESIDENTE', 0, -13);
+  s.fillStyle = '#555'; s.font = '3.5px Nunito,sans-serif';
+  s.fillText('Câmara', 0, -9);
+
+  /* ── BRAÇO ESQUERDO ── */
+  function drawArm(side, rot, prop) {
+    s.save();
+    s.translate(side * 22, -38);
+    s.rotate(T(rot));
+    s.beginPath(); s.roundRect(-5,-1,10,28,5);
+    s.fillStyle = C.suit; s.fill();
+    // mão
+    s.beginPath(); s.arc(0, 30, 8, 0, Math.PI*2);
+    s.fillStyle = C.skin; s.fill();
+    // prop
+    if (prop === 'wine') {
+      s.save(); s.translate(side*8, 22);
+      // copo
+      s.beginPath(); s.ellipse(0,0,7,10,0,0,Math.PI*2);
+      s.fillStyle = C.wine; s.fill();
+      s.strokeStyle = C.wineRim; s.lineWidth=1; s.stroke();
+      // haste
+      s.beginPath(); s.moveTo(0,10); s.lineTo(0,18);
+      s.strokeStyle='rgba(255,255,255,.5)'; s.lineWidth=1.5; s.stroke();
+      // base
+      s.beginPath(); s.ellipse(0,18,5,2,0,0,Math.PI*2);
+      s.fillStyle='rgba(255,255,255,.4)'; s.fill();
+      s.restore();
+    }
+    else if (prop === 'castanha') {
+      s.save(); s.translate(side*7, 20);
+      s.beginPath(); s.ellipse(0,0,9,8,0,0,Math.PI*2);
+      s.fillStyle = C.chestnut; s.fill();
+      s.beginPath(); s.ellipse(3,-3,3,2,0,0,Math.PI*2);
+      s.fillStyle = C.chestnutShin; s.fill();
+      s.restore();
+    }
+    s.restore();
+  }
+  drawArm(-1, armLRot, propL);
+  drawArm(1, armRRot, propR);
+
+  /* ── PESCOÇO ── */
+  s.beginPath(); s.roundRect(-7,-56,14,14,3);
+  s.fillStyle = C.skin; s.fill();
+
+  /* ── CABEÇA ── */
+  s.save();
+  s.rotate(T(headTilt));
+  s.scale(stretch, squash);
+  // cabeça
+  s.beginPath(); s.ellipse(0,-72, 22, 24, 0, 0, Math.PI*2);
+  s.fillStyle = C.skin; s.fill();
+  // cabelo
+  s.beginPath(); s.ellipse(0,-88, 22, 12, 0, 0, Math.PI*2);
+  s.fillStyle = C.hair; s.fill();
+  s.beginPath(); s.rect(-22,-88,44,10);
+  s.fillStyle = C.hair; s.fill();
+
+  // bochechas
+  s.beginPath(); s.ellipse(-16,-68,7,4.5,0,0,Math.PI*2);
+  s.fillStyle='rgba(255,100,100,.25)'; s.fill();
+  s.beginPath(); s.ellipse(16,-68,7,4.5,0,0,Math.PI*2);
+  s.fillStyle='rgba(255,100,100,.25)'; s.fill();
+
+  // olhos
+  if (eyeState === 'happy') {
+    s.beginPath(); s.moveTo(-14,-74); s.quadraticCurveTo(-9,-79,-4,-74);
+    s.strokeStyle='#333'; s.lineWidth=2; s.lineCap='round'; s.stroke();
+    s.beginPath(); s.moveTo(4,-74); s.quadraticCurveTo(9,-79,14,-74);
+    s.stroke();
+  } else if (eyeState === 'wide') {
+    s.beginPath(); s.arc(-9,-74,5.5,0,Math.PI*2);
+    s.fillStyle='#fff'; s.fill(); s.strokeStyle='#333'; s.lineWidth=1.5; s.stroke();
+    s.beginPath(); s.arc(-9,-74,2.5,0,Math.PI*2);
+    s.fillStyle='#333'; s.fill();
+    s.beginPath(); s.arc(9,-74,5.5,0,Math.PI*2);
+    s.fillStyle='#fff'; s.fill(); s.strokeStyle='#333'; s.lineWidth=1.5; s.stroke();
+    s.beginPath(); s.arc(9,-74,2.5,0,Math.PI*2);
+    s.fillStyle='#333'; s.fill();
+  } else if (eyeState === 'flat') {
+    s.beginPath(); s.moveTo(-14,-74); s.lineTo(-4,-74);
+    s.strokeStyle='#333'; s.lineWidth=2; s.lineCap='round'; s.stroke();
+    s.beginPath(); s.moveTo(4,-74); s.lineTo(14,-74);
+    s.stroke();
+  } else if (eyeState === 'nervous') {
+    s.beginPath(); s.arc(-9,-73,5.5,0,Math.PI*2);
+    s.fillStyle='#fff'; s.fill(); s.strokeStyle='#333'; s.lineWidth=1.5; s.stroke();
+    s.beginPath(); s.arc(-9,-72,2.5,0,Math.PI*2);
+    s.fillStyle='#333'; s.fill();
+    s.beginPath(); s.arc(9,-73,5.5,0,Math.PI*2);
+    s.fillStyle='#fff'; s.fill(); s.strokeStyle='#333'; s.lineWidth=1.5; s.stroke();
+    s.beginPath(); s.arc(9,-72,2.5,0,Math.PI*2);
+    s.fillStyle='#333'; s.fill();
+    // suor
+    s.beginPath(); s.ellipse(22,-82,3,5,T(15),0,Math.PI*2);
+    s.fillStyle='rgba(100,181,246,.8)'; s.fill();
+  }
+
+  // boca
+  if (mouthState === 'smile') {
+    s.beginPath(); s.moveTo(-10,-63); s.quadraticCurveTo(0,-56,10,-63);
+    s.strokeStyle=C.red; s.lineWidth=2; s.lineCap='round'; s.stroke();
+  } else if (mouthState === 'open') {
+    s.beginPath(); s.ellipse(0,-62,7,5,0,0,Math.PI*2);
+    s.fillStyle=C.red; s.fill();
+  } else if (mouthState === 'flat') {
+    s.beginPath(); s.moveTo(-8,-62); s.lineTo(8,-62);
+    s.strokeStyle='#555'; s.lineWidth=1.5; s.stroke();
+  } else if (mouthState === 'worried') {
+    s.beginPath(); s.moveTo(-8,-60); s.quadraticCurveTo(0,-64,8,-60);
+    s.strokeStyle=C.red; s.lineWidth=2; s.lineCap='round'; s.stroke();
+  }
+  s.restore();
+
+  s.restore(); // restore translate
+}
+
+/* ═══════════════════════════════════════════════════════
+   CENAS: fundos e props animados por Canvas
+═══════════════════════════════════════════════════════ */
+
+function sceneIntro(ctx, t) {
+  const W=320,H=240;
+  // fundo festa noturna
+  ctx.fillStyle='#1a0a00'; ctx.fillRect(0,0,W,H);
+  // estrelas
+  for(let i=0;i<20;i++){
+    const bx=10+(i*67)%300, by=5+(i*31)%80;
+    const br=(Math.sin(t*2+i)*.5+.5);
+    ctx.beginPath(); ctx.arc(bx,by,1.5,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${.3+br*.6})`; ctx.fill();
+  }
+  // fogueira
+  const fx=160,fy=185;
+  // troncos
+  ctx.save(); ctx.translate(fx,fy);
+  ctx.rotate(T(-20)); ctx.beginPath(); ctx.roundRect(-30,-5,60,10,3);
+  ctx.fillStyle='#6d4c41'; ctx.fill(); ctx.restore();
+  ctx.save(); ctx.translate(fx,fy);
+  ctx.rotate(T(20)); ctx.beginPath(); ctx.roundRect(-30,-5,60,10,3);
+  ctx.fillStyle='#5d4037'; ctx.fill(); ctx.restore();
+  // chamas
+  [[38,55,'#ff6b00',.85],[24,40,'#ffd166',.8],[14,28,'#fff',.7]].forEach(([rx,ry,col,alpha],i)=>{
+    const fl = 1+Math.sin(t*5+i)*.12;
+    ctx.beginPath(); ctx.ellipse(fx, fy-ry*fl/2, rx*fl, ry*fl/2, 0,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.globalAlpha=alpha; ctx.fill(); ctx.globalAlpha=1;
+  });
+  // grinalda
+  for(let i=0;i<6;i++){
+    const gx=10+i*54, gy=18;
+    ctx.beginPath(); ctx.moveTo(gx,gy); ctx.lineTo(gx+24,gy); ctx.lineTo(gx+12,gy+26); ctx.closePath();
+    ctx.fillStyle=['#e53935','#ffd166','#4caf50','#1565c0','#f47920','#9c27b0'][i];
+    ctx.globalAlpha=.9; ctx.fill(); ctx.globalAlpha=1;
+    if(i<5){ ctx.beginPath(); ctx.moveTo(gx+24,gy); ctx.lineTo(gx+54,gy); ctx.strokeStyle='#333'; ctx.lineWidth=1.5; ctx.stroke(); }
+  }
+  // personagem
+  drawChar(ctx, 160, 205, {t, mode:'dance'});
+}
+
+/* renderiza uma cena num canvas 640x220 */
+function drawScene(ctx, scene, t) {
+  const W=640,H=220;
+  ctx.clearRect(0,0,W,H);
+
+  if (scene.id === 1) { // FESTA
+    ctx.fillStyle='#2d1000'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#8d6e63'; ctx.fillRect(0,165,W,55);
+    // grinalda
+    for(let i=0;i<9;i++){
+      const gx=20+i*70;
+      ctx.beginPath(); ctx.moveTo(gx,14); ctx.lineTo(gx+30,14); ctx.lineTo(gx+15,38); ctx.closePath();
+      ctx.fillStyle=['#e53935','#ffd166','#4caf50','#1565c0','#f47920','#9c27b0','#e53935','#ffd166','#4caf50'][i];
+      ctx.globalAlpha=.9; ctx.fill(); ctx.globalAlpha=1;
+      if(i<8){ ctx.beginPath(); ctx.moveTo(gx+30,14); ctx.lineTo(gx+70,14); ctx.strokeStyle='#555'; ctx.lineWidth=1.5; ctx.stroke(); }
+    }
+    // estrelas
+    for(let i=0;i<18;i++){
+      const bx=5+(i*47)%630, by=6+(i*23)%60;
+      ctx.beginPath(); ctx.arc(bx,by,1.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${.3+Math.sin(t*2+i)*.3})`; ctx.fill();
+    }
+    // fogueira
+    [[52,72,'#ff6b00',.85],[34,55,'#ffd166',.8],[18,34,'#fff',.7]].forEach(([rx,ry,col,al],i)=>{
+      const fl=1+Math.sin(t*5+i)*.14;
+      ctx.beginPath(); ctx.ellipse(320,152,rx*fl,ry*fl/2,0,0,Math.PI*2);
+      ctx.fillStyle=col; ctx.globalAlpha=al; ctx.fill(); ctx.globalAlpha=1;
+    });
+    ctx.save(); ctx.translate(320,163); ctx.rotate(T(-20));
+    ctx.beginPath(); ctx.roundRect(-38,-6,76,12,4); ctx.fillStyle='#6d4c41'; ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(320,163); ctx.rotate(T(20));
+    ctx.beginPath(); ctx.roundRect(-38,-6,76,12,4); ctx.fillStyle='#5d4037'; ctx.fill(); ctx.restore();
+    // personagem a dançar
+    drawChar(ctx, 160, 180, {t, mode:'dance'});
+    // segundo personagem (espectador)
+    drawChar(ctx, 480, 180, {t:t+1, mode:'wave'});
+  }
+
+  else if (scene.id === 2) { // MAGUSTO
+    ctx.fillStyle='#1a0d00'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4e342e'; ctx.fillRect(0,162,W,58);
+    // brasas pulsantes
+    for(let i=0;i<6;i++){
+      const bx=200+i*38;
+      ctx.beginPath(); ctx.ellipse(bx,170,14,6,0,0,Math.PI*2);
+      ctx.fillStyle=C.ember; ctx.globalAlpha=.5+Math.sin(t*3+i)*.3; ctx.fill(); ctx.globalAlpha=1;
+    }
+    // frigideira
+    ctx.beginPath(); ctx.ellipse(300,162,110,20,0,0,Math.PI*2);
+    ctx.fillStyle='#212121'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(300,157,100,14,0,0,Math.PI*2);
+    ctx.fillStyle='#1a1a1a'; ctx.fill();
+    // cabo
+    ctx.beginPath(); ctx.roundRect(406,152,58,12,5); ctx.fillStyle='#3e2723'; ctx.fill();
+    // castanhas na frigideira a saltitar
+    for(let i=0;i<8;i++){
+      const cx=228+i*20, cy=148+(Math.sin(t*4+i*0.7))*5;
+      ctx.beginPath(); ctx.ellipse(cx,cy,10,8,0,0,Math.PI*2);
+      ctx.fillStyle=C.chestnut; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+3,cy-3,3,2,0,0,Math.PI*2);
+      ctx.fillStyle=C.chestnutShin; ctx.fill();
+    }
+    // fumo sobe
+    for(let i=0;i<4;i++){
+      const fy=130-t*20%60-i*18;
+      ctx.beginPath(); ctx.arc(270+i*15, fy, 8+i*4, 0,Math.PI*2);
+      ctx.fillStyle=`rgba(200,200,200,${.12-i*.02})`; ctx.fill();
+    }
+    drawChar(ctx, 150, 178, {t, mode:'eat'});
+  }
+
+  else if (scene.id === 3) { // VINHO
+    ctx.fillStyle='#2a0a3a'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4a148c'; ctx.fillRect(0,162,W,58);
+    // barris
+    [[100,90],[520,88]].forEach(([bx,by])=>{
+      ctx.beginPath(); ctx.roundRect(bx-24,by,48,56,6); ctx.fillStyle='#795548'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx,by,26,9,0,0,Math.PI*2); ctx.fillStyle='#6d4c41'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx,by+56,26,9,0,0,Math.PI*2); ctx.fillStyle='#5d4037'; ctx.fill();
+      [by+18,by+38].forEach(ly=>{ ctx.beginPath(); ctx.moveTo(bx-24,ly); ctx.lineTo(bx+24,ly); ctx.strokeStyle='#5d4037'; ctx.lineWidth=2; ctx.stroke(); });
+    });
+    // uvas pendentes
+    for(let g=0;g<3;g++){
+      const gx=230+g*60;
+      ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,22); ctx.strokeStyle='#4caf50'; ctx.lineWidth=2; ctx.stroke();
+      for(let u=0;u<6;u++){
+        const ux=gx+(u%3-1)*12, uy=22+Math.floor(u/3)*12+8;
+        ctx.beginPath(); ctx.arc(ux,uy,7,0,Math.PI*2);
+        ctx.fillStyle='#7b1fa2'; ctx.globalAlpha=.85; ctx.fill(); ctx.globalAlpha=1;
+      }
+    }
+    // mesa
+    ctx.beginPath(); ctx.roundRect(180,130,220,14,4); ctx.fillStyle='#8d6e63'; ctx.fill();
+    // copos na mesa, a brilhar
+    [[210,105],[300,102],[370,108]].forEach(([cx,cy],i)=>{
+      const gl=Math.sin(t*2+i)*.1;
+      ctx.beginPath(); ctx.ellipse(cx,cy,8,12,0,0,Math.PI*2);
+      ctx.fillStyle=C.wine; ctx.globalAlpha=.6+gl; ctx.fill(); ctx.globalAlpha=1;
+      ctx.strokeStyle=C.wineRim; ctx.lineWidth=1; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx,cy+12); ctx.lineTo(cx,130);
+      ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.lineWidth=1.2; ctx.stroke();
+    });
+    drawChar(ctx, 310, 178, {t, mode:'drink'});
+  }
+
+  else if (scene.id === 4) { // ESTRADA
+    ctx.fillStyle='#0d0d1a'; ctx.fillRect(0,0,W,H);
+    // estrelas
+    for(let i=0;i<16;i++){
+      const sx=5+(i*41)%630,sy=5+(i*19)%65;
+      ctx.beginPath(); ctx.arc(sx,sy,1.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${.3+Math.sin(t+i)*.2})`; ctx.fill();
+    }
+    ctx.fillStyle='#424242'; ctx.fillRect(0,132,W,88);
+    ctx.fillStyle='#555'; ctx.fillRect(0,157,W,7);
+    // riscas
+    for(let i=0;i<10;i++){
+      ctx.beginPath(); ctx.roundRect(i*66,158,36,5,2);
+      ctx.fillStyle='rgba(255,209,102,.6)'; ctx.fill();
+    }
+    // buracos que racham
+    [[130,142,28,11],[290,137,22,9],[440,143,18,8]].forEach(([bx,by,rx,ry])=>{
+      const crack=Math.sin(t*3)*.5+.5;
+      ctx.beginPath(); ctx.ellipse(bx,by,rx+crack*2,ry+crack,0,0,Math.PI*2);
+      ctx.fillStyle='#111'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx+1,by+1,rx-3,ry-2,0,0,Math.PI*2);
+      ctx.fillStyle='#0a0a0a'; ctx.fill();
+    });
+    // placa EN103
+    const pr=Math.sin(t*2)*.5+.5;
+    ctx.beginPath(); ctx.roundRect(460,36,94,60,4); ctx.fillStyle='#fff'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(460,36,94,20,4); ctx.fillStyle='#003b7a'; ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 11px Fredoka One,cursive'; ctx.textAlign='center';
+    ctx.fillText('EN 103',507,51);
+    ctx.fillStyle='#c0392b'; ctx.font='9px Nunito,sans-serif';
+    ctx.fillText('Estado degradado',507,76);
+    ctx.beginPath(); ctx.roundRect(504,96,6,28,2); ctx.fillStyle='#616161'; ctx.fill();
+    // carro a saltitar pelos buracos
+    const carY=118+Math.abs(Math.sin(t*7))*6;
+    const carRot=Math.sin(t*7)*4;
+    ctx.save(); ctx.translate(80,carY); ctx.rotate(T(carRot));
+    ctx.beginPath(); ctx.roundRect(0,0,90,32,6); ctx.fillStyle='#37474f'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(14,-18,60,22,5); ctx.fillStyle='#455a64'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(18,-14,24,14,3); ctx.fillStyle='rgba(128,203,196,.6)'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(48,-14,24,14,3); ctx.fillStyle='rgba(128,203,196,.6)'; ctx.fill();
+    [[15,30],[70,30]].forEach(([wx,wy])=>{
+      ctx.beginPath(); ctx.arc(wx,wy,11,0,Math.PI*2); ctx.fillStyle='#212121'; ctx.fill();
+      ctx.beginPath(); ctx.arc(wx,wy,6,0,Math.PI*2); ctx.fillStyle='#424242'; ctx.fill();
+    });
+    ctx.restore();
+    drawChar(ctx, 330, 178, {t, mode:'stumble'});
+  }
+
+  else if (scene.id === 5) { // EMIGRAÇÃO
+    ctx.fillStyle='#0a1a10'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#1b4332'; ctx.fillRect(0,162,W,58);
+    // avião a mover-se
+    const planeX = (t*30)%750-100;
+    ctx.save(); ctx.translate(planeX,50);
+    ctx.beginPath(); ctx.ellipse(0,0,55,14,0,0,Math.PI*2); ctx.fillStyle='#90a4ae'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-55,0); ctx.lineTo(-22,-18); ctx.lineTo(-22,0); ctx.closePath(); ctx.fillStyle='#78909c'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(18,-4); ctx.lineTo(38,-18); ctx.lineTo(38,0); ctx.closePath(); ctx.fillStyle='#78909c'; ctx.fill();
+    for(let w=0;w<5;w++){ ctx.beginPath(); ctx.roundRect(-42+w*16,-8,10,10,2); ctx.fillStyle='rgba(176,190,197,.7)'; ctx.fill(); }
+    ctx.restore();
+    // rasto
+    for(let i=0;i<6;i++){
+      ctx.beginPath(); ctx.arc(planeX-60-i*28,52+i*2, 5+i*2, 0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${.1-i*.015})`; ctx.fill();
+    }
+    // seta de saída tracejada
+    ctx.setLineDash([10,5]);
+    ctx.beginPath(); ctx.moveTo(220,120); ctx.lineTo(380,55);
+    ctx.strokeStyle='#ffd166'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.setLineDash([]);
+    // mala
+    ctx.beginPath(); ctx.roundRect(130,115,58,46,6); ctx.fillStyle='#8d6e63'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(146,103,26,14,3); ctx.fillStyle='#6d4c41'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(130,138); ctx.lineTo(188,138); ctx.strokeStyle='#6d4c41'; ctx.lineWidth=2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(159,138,5,0,Math.PI*2); ctx.fillStyle='#ffd166'; ctx.fill();
+    // edifício abandonado
+    ctx.beginPath(); ctx.roundRect(430,55,140,130,4); ctx.fillStyle='#546e7a'; ctx.fill();
+    for(let wi=0;wi<3;wi++) for(let wj=0;wj<3;wj++){
+      ctx.beginPath(); ctx.roundRect(443+wi*38,68+wj*38,24,28,2);
+      ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fill();
+    }
+    ctx.fillStyle='rgba(255,200,200,.7)'; ctx.font='8px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Posto fechado',500,50);
+    drawChar(ctx, 290, 178, {t, mode:'wave'});
+  }
+
+  else if (scene.id === 6) { // INTERNET
+    ctx.fillStyle='#050d14'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#0d1b2a'; ctx.fillRect(0,160,W,60);
+    for(let i=0;i<18;i++){
+      const sx=5+(i*37)%630,sy=4+(i*17)%65;
+      ctx.beginPath(); ctx.arc(sx,sy,1.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${.2+Math.sin(t+i)*.25})`; ctx.fill();
+    }
+    // antena
+    ctx.beginPath(); ctx.roundRect(354,52,12,104,4); ctx.fillStyle='#607d8b'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(360,52); ctx.lineTo(332,76); ctx.lineTo(388,76); ctx.closePath(); ctx.fillStyle='#546e7a'; ctx.fill();
+    // arcos fracos piscando
+    [65,50,35].forEach((r,i)=>{
+      const alpha=Math.sin(t*3+i)*.15+.08;
+      ctx.beginPath(); ctx.arc(360,52,r,Math.PI*1.1,Math.PI*1.9);
+      ctx.strokeStyle=`rgba(255,255,255,${alpha})`; ctx.lineWidth=3; ctx.lineCap='round'; ctx.stroke();
+    });
+    // X vermelho grande
+    ctx.strokeStyle='#e53935'; ctx.lineWidth=7; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(326,28); ctx.lineTo(394,96); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(394,28); ctx.lineTo(326,96); ctx.stroke();
+    // casa isolada
+    ctx.beginPath(); ctx.moveTo(460,100); ctx.lineTo(515,68); ctx.lineTo(570,100); ctx.closePath(); ctx.fillStyle='#5d4037'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(460,100,110,72,2); ctx.fillStyle='#795548'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(498,130,30,42,2); ctx.fillStyle='#3e2723'; ctx.fill();
+    // janelas apagadas
+    ctx.beginPath(); ctx.roundRect(466,110,24,20,2); ctx.fillStyle='rgba(0,0,0,.4)'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(540,110,24,20,2); ctx.fillStyle='rgba(0,0,0,.4)'; ctx.fill();
+    // balão sem sinal
+    ctx.beginPath(); ctx.roundRect(398,24,148,36,10); ctx.fillStyle='rgba(255,255,255,.92)'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(408,60); ctx.lineTo(395,76); ctx.lineTo(428,60); ctx.closePath(); ctx.fillStyle='rgba(255,255,255,.92)'; ctx.fill();
+    ctx.fillStyle='#c0392b'; ctx.font='bold 11px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Sem sinal aqui!',472,46);
+    drawChar(ctx, 200, 178, {t, mode:'nervous'});
+  }
+
+  else if (scene.id === 7) { // CORTE DA FITA
+    ctx.fillStyle='#00172e'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#003b7a'; ctx.fillRect(0,162,W,58);
+    // edifício
+    ctx.beginPath(); ctx.roundRect(200,18,200,150,4); ctx.fillStyle='#90a4ae'; ctx.fill();
+    for(let wi=0;wi<4;wi++) for(let wj=0;wj<3;wj++){
+      ctx.beginPath(); ctx.roundRect(214+wi*44,30+wj*44,28,34,2);
+      ctx.fillStyle='rgba(255,209,102,.8)'; ctx.fill();
+    }
+    // fita vermelha
+    ctx.beginPath(); ctx.roundRect(185,120,240,16,2); ctx.fillStyle='#e53935'; ctx.fill();
+    // laço a pulsar
+    const lp=Math.sin(t*3)*.04+1;
+    ctx.save(); ctx.translate(305,116); ctx.scale(lp,lp);
+    ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(-16,0); ctx.lineTo(16,0); ctx.closePath(); ctx.fillStyle='#e53935'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-16,0); ctx.lineTo(0,14); ctx.lineTo(0,0); ctx.closePath(); ctx.fillStyle='#c62828'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(0,14); ctx.lineTo(0,0); ctx.closePath(); ctx.fillStyle='#e53935'; ctx.fill();
+    ctx.restore();
+    // fotógrafo
+    ctx.beginPath(); ctx.arc(490,128,14,0,Math.PI*2); ctx.fillStyle=C.skin; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(476,140,28,38,4); ctx.fillStyle='#607d8b'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(484,116,20,18,3); ctx.fillStyle='#212121'; ctx.fill();
+    ctx.beginPath(); ctx.arc(494,124,7,0,Math.PI*2); ctx.fillStyle='#111'; ctx.fill();
+    ctx.beginPath(); ctx.arc(494,124,4,0,Math.PI*2); ctx.fillStyle='#37474f'; ctx.fill();
+    // flash
+    const flashA=Math.sin(t*2.5)>.8?.5:0;
+    if(flashA>0){ ctx.beginPath(); ctx.arc(490,105,18,0,Math.PI*2); ctx.fillStyle=`rgba(255,255,200,${flashA})`; ctx.fill(); }
+    drawChar(ctx, 145, 178, {t, mode:'jump'});
+  }
+
+  else if (scene.id === 8) { // HOSPITAL
+    ctx.fillStyle='#2a0000'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#7f0000'; ctx.fillRect(0,162,W,58);
+    // hospital ao fundo
+    ctx.beginPath(); ctx.roundRect(350,30,200,155,4); ctx.fillStyle='#eceff1'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(416,46,36,10,1); ctx.fillStyle='#e53935'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(430,36,8,30,1); ctx.fillStyle='#e53935'; ctx.fill();
+    for(let wi=0;wi<3;wi++) for(let wj=0;wj<3;wj++){
+      ctx.beginPath(); ctx.roundRect(362+wi*50,60+wj*44,28,30,2);
+      ctx.fillStyle='rgba(255,255,255,.5)'; ctx.fill();
+    }
+    // ambulância
+    const ambX=330+Math.sin(t*4)*3;
+    ctx.save(); ctx.translate(ambX,118);
+    ctx.beginPath(); ctx.roundRect(0,0,80,36,4); ctx.fillStyle='#eceff1'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(6,-16,46,20,3); ctx.fillStyle='#cfd8dc'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(30,4,8,20,1); ctx.fillStyle='#e53935'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(22,12,24,4,1); ctx.fillStyle='#e53935'; ctx.fill();
+    const sirene=Math.sin(t*8)>.3;
+    ctx.beginPath(); ctx.roundRect(22,-20,14,8,4); ctx.fillStyle=sirene?'#e53935':'#666'; ctx.fill();
+    [[12,34],[62,34]].forEach(([wx,wy])=>{
+      ctx.beginPath(); ctx.arc(wx,wy,10,0,Math.PI*2); ctx.fillStyle='#212121'; ctx.fill();
+      ctx.beginPath(); ctx.arc(wx,wy,5.5,0,Math.PI*2); ctx.fillStyle='#424242'; ctx.fill();
+    });
+    ctx.restore();
+    // seta tracejada
+    ctx.setLineDash([10,5]);
+    ctx.beginPath(); ctx.moveTo(170,150); ctx.lineTo(328,132);
+    ctx.strokeStyle='#ffd166'; ctx.lineWidth=3; ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.roundRect(218,106,72,24,12); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fill();
+    ctx.fillStyle='#ffd166'; ctx.font='bold 12px Fredoka One,cursive'; ctx.textAlign='center';
+    ctx.fillText('40 km',254,122);
+    // idoso com ponto de interrogação
+    ctx.beginPath(); ctx.ellipse(108,126,18,20,0,0,Math.PI*2); ctx.fillStyle=C.skin; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(108,110,18,12,0,0,Math.PI*2); ctx.fillStyle='#78909c'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(94,144,28,38,4); ctx.fillStyle='#9e9e9e'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(122,158); ctx.lineTo(138,178); ctx.strokeStyle='#757575'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.stroke();
+    const qAlpha=Math.sin(t*2)*.3+.7;
+    ctx.fillStyle=`rgba(255,209,102,${qAlpha})`; ctx.font='bold 22px Fredoka One,cursive'; ctx.textAlign='center';
+    ctx.fillText('?',108,98);
+    drawChar(ctx, 250, 178, {t, mode:'idle'});
+  }
+
+  else if (scene.id === 9) { // DISCURSO FINAL
+    ctx.fillStyle='#000d1a'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#001f4d'; ctx.fillRect(0,162,W,58);
+    // confettis a cair
+    const confN=30;
+    for(let i=0;i<confN;i++){
+      const cx2=30+(i*73)%580;
+      const cy2=((t*40+i*28))%230;
+      const cr=T(t*120+i*40);
+      ctx.save(); ctx.translate(cx2,cy2); ctx.rotate(cr);
+      ctx.beginPath(); ctx.roundRect(-4,-6,8,12,1);
+      ctx.fillStyle=C.confetti[i%C.confetti.length]; ctx.globalAlpha=.8; ctx.fill(); ctx.globalAlpha=1;
+      ctx.restore();
+    }
+    // púlpito
+    ctx.beginPath(); ctx.roundRect(235,104,110,68,5); ctx.fillStyle='#5d4037'; ctx.fill();
+    ctx.beginPath(); ctx.roundRect(222,98,136,14,3); ctx.fillStyle='#4e342e'; ctx.fill();
+    // microfone
+    ctx.beginPath(); ctx.roundRect(278,70,10,32,1); ctx.fillStyle='#333'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(283,70,9,10,0,0,Math.PI*2); ctx.fillStyle='#212121'; ctx.fill();
+    // balão de fala
+    ctx.beginPath(); ctx.roundRect(330,16,262,80,14); ctx.fillStyle='rgba(255,255,255,.92)'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(330,58); ctx.lineTo(310,78); ctx.lineTo(348,68); ctx.closePath(); ctx.fillStyle='rgba(255,255,255,.92)'; ctx.fill();
+    ctx.fillStyle='#333'; ctx.font='italic 11px Nunito,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Nunca estivemos',461,42);
+    ctx.fillText('tão bem!',461,58);
+    ctx.fillStyle='#c0392b'; ctx.font='bold 10px Nunito,sans-serif';
+    ctx.fillText('(os dados discordam)',461,78);
+    // plateia
+    [[75,148],[105,145],[48,152],[520,148],[550,145],[485,152]].forEach(([hx,hy])=>{
+      ctx.beginPath(); ctx.ellipse(hx,hy-22,12,13,0,0,Math.PI*2); ctx.fillStyle=C.skin; ctx.fill();
+      ctx.beginPath(); ctx.roundRect(hx-10,hy-12,20,26,3); ctx.fillStyle='#607d8b'; ctx.fill();
+    });
+    drawChar(ctx, 283, 178, {t, mode:'dance'});
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DADOS DAS CENAS
+═══════════════════════════════════════════════════════ */
+const SCENES = [
+  {id:1,title:'A Festa do Barroso',speech:'Montalegre tem uma das melhores festas do país! Somos conhecidos no mundo inteiro!',source:'Censos 2021 · INE',
+    q:'A população de Montalegre tem vindo a...',
+    choices:[{t:'Crescer, atraída pelo turismo das festas',c:false},{t:'Manter-se estável',c:false},{t:'Diminuir — dos concelhos com maior desertificação de Trás-os-Montes',c:true}],
+    ok:'Correto. Os Censos 2021 confirmam perda de população consistente. As festas atraem visitantes, não residentes.',
+    no:'Montalegre perde população de forma consistente. Os Censos 2021 colocam-no entre os mais afetados pela desertificação em Trás-os-Montes.'},
+  {id:2,title:'O Magusto da Aldeia',speech:'Que bela tradição! A Presidente come castanhas com o povo — assim preservamos Barroso!',source:'INE · Índice de Envelhecimento 2021',
+    q:'O índice de envelhecimento de Montalegre é...',
+    choices:[{t:'Semelhante à média nacional',c:false},{t:'Ligeiramente acima da média',c:false},{t:'Muito acima da média — um dos mais elevados do país',c:true}],
+    ok:'Correto. O índice de envelhecimento está entre os mais altos do país. As castanhas são boas — mas quem as come envelhece sem substituição.',
+    no:'O índice de envelhecimento de Montalegre é dos mais altos do país. Quem passa o magusto envelhece sem novas gerações a substituir.'},
+  {id:3,title:'A Vindima Feliz',speech:'Brindo ao futuro de Montalegre! O concelho nunca esteve tão bem!',source:'INE · PORDATA · Rendimento per capita',
+    q:'O rendimento médio disponível per capita em Montalegre situa-se...',
+    choices:[{t:'Acima da média nacional',c:false},{t:'Na média nacional',c:false},{t:'Significativamente abaixo da média nacional e regional',c:true}],
+    ok:'Correto. Os dados do INE mostram rendimento per capita muito abaixo da média. O brinde ao futuro custa caro a quem ganha pouco.',
+    no:'O rendimento disponível per capita em Montalegre fica muito aquém da média nacional. O brinde é real, o futuro ainda não.'},
+  {id:4,title:'A EN103 de Buracos',speech:'As nossas estradas estão em excelentes condições! Montalegre está bem ligado ao país!',source:'IMT · Conservação de Estradas',
+    q:'A EN103, eixo principal de ligação de Montalegre, está...',
+    choices:[{t:'Em bom estado, intervencionada recentemente',c:false},{t:'Com necessidade de intervenção urgente em vários troços',c:true},{t:'A ser totalmente remodelada com fundos comunitários',c:false}],
+    ok:'Correto. A EN103 tem troços degradados há anos. O isolamento rodoviário é exclusão territorial.',
+    no:'A EN103 apresenta troços degradados há muito. O isolamento rodoviário aprofunda a exclusão de Montalegre.'},
+  {id:5,title:'A Emigração Jovem',speech:'Os nossos jovens têm futuro aqui! Há cada vez mais oportunidades em Montalegre!',source:'INE · Censos 2021 · PORDATA',
+    q:'A principal razão que leva os jovens de Montalegre a sair é...',
+    choices:[{t:'Preferência por cidades por razões culturais, não económicas',c:false},{t:'Falta de emprego qualificado e salários competitivos no território',c:true},{t:'O mercado local é robusto — saem por aventura',c:false}],
+    ok:'Correto. A falta de emprego qualificado é o principal motor de saída. Montalegre tem dos índices de população jovem mais baixos da região Norte.',
+    no:'A falta de emprego qualificado e oportunidades económicas é o principal motor. Não é aventura — é necessidade.'},
+  {id:6,title:'A Internet que Não Chega',speech:'A conectividade digital está a chegar a toda a gente! Estamos a modernizar o concelho!',source:'ANACOM · Cobertura 2024',
+    q:'Em termos de cobertura de internet nas aldeias de Montalegre...',
+    choices:[{t:'A cobertura é total — todas as aldeias têm fibra ou 4G estável',c:false},{t:'Existem zonas brancas significativas, com aldeias sem cobertura adequada',c:true},{t:'O problema está resolvido desde a chegada do 5G',c:false}],
+    ok:'Correto. Existem zonas brancas reais. Sem internet não há teletrabalho, não há fixação de população, não há futuro digital.',
+    no:'Montalegre tem zonas brancas reais. Sem internet estável o teletrabalho é impossível e a exclusão digital aprofunda o isolamento.'},
+  {id:7,title:'O Corte da Fita',speech:'Mais um projeto inaugurado! Investimos como nunca em Montalegre!',source:'INE · Rendimento disponível per capita',
+    q:'Em relação ao rendimento médio disponível per capita, Montalegre situa-se...',
+    choices:[{t:'Acima da média nacional',c:false},{t:'Na média nacional',c:false},{t:'Significativamente abaixo da média nacional e regional',c:true}],
+    ok:'Correto. Os dados do INE mostram rendimento per capita muito abaixo da média. Os cortes de fita não substituem desenvolvimento.',
+    no:'O rendimento disponível per capita em Montalegre fica muito aquém da média nacional. Inaugurar não é o mesmo que desenvolver.'},
+  {id:8,title:'O Hospital a 40 Minutos',speech:'A saúde dos barrosões está garantida. Temos um hospital a 40 minutos!',source:'ACSS · SNS · Plano de Emergência',
+    q:'Qual é o problema central do acesso à saúde em Montalegre?',
+    choices:[{t:'Não há problema — o serviço é adequado à população',c:false},{t:'O isolamento geográfico, envelhecimento e falta de meios deixam populações vulneráveis sem resposta atempada',c:true},{t:'O único problema é a falta de um segundo hospital no concelho',c:false}],
+    ok:'Correto. Isolamento + população idosa + falta de transporte = vulnerabilidade real. Um hospital a 40 km não resolve quem não conduz.',
+    no:'Um hospital a 40 km não resolve quem não conduz e vive numa aldeia. O isolamento e o envelhecimento criam vulnerabilidade estrutural.'},
+  {id:9,title:'O Discurso da Vitória',speech:'Montalegre nunca esteve tão bem! Continuemos juntos neste caminho de sucesso!',source:'Síntese de indicadores',
+    q:'O que melhor define a situação atual de Montalegre?',
+    choices:[{t:'Crescimento e desenvolvimento exemplar',c:false},{t:'Boa gestão financeira, mas declínio demográfico e socioeconómico que exige mudança de visão',c:true},{t:'Abandono total e má gestão em todas as áreas',c:false}],
+    ok:'Correto. Pode haver equilíbrio financeiro, mas os indicadores sociais e demográficos revelam declínio estrutural. Montalegre precisa de mais do que continuidade.',
+    no:'A resposta mais honesta: pode haver gestão financeira equilibrada, mas os indicadores sociais mostram que não chega. Montalegre precisa de mudança de visão.'}
+];
+
+/* ═══════════════════════════════════════════════════════
+   ESTADO DO JOGO
+═══════════════════════════════════════════════════════ */
+let current=0, score=0, answered=false;
+let animT=0, lastTs=null;
+let introLoop=null, sceneLoop=null, finalLoop=null;
+
+function stopAllLoops(){
+  [introLoop,sceneLoop,finalLoop].forEach(id=>{ if(id) cancelAnimationFrame(id); });
+  introLoop=sceneLoop=finalLoop=null;
+}
+
+/* INTRO LOOP */
+function runIntro(){
+  stopAllLoops();
+  const canvas=document.getElementById('intro-canvas');
+  const ctx=canvas.getContext('2d');
+  animT=0; lastTs=null;
+  function loop(ts){
+    if(!lastTs) lastTs=ts;
+    animT+=(ts-lastTs)/1000; lastTs=ts;
+    ctx.clearRect(0,0,320,240);
+    sceneIntro(ctx,animT);
+    introLoop=requestAnimationFrame(loop);
+  }
+  introLoop=requestAnimationFrame(loop);
+}
+
+/* SCENE LOOP */
+function runScene(){
+  stopAllLoops();
+  const canvas=document.getElementById('scene-canvas');
+  const ctx=canvas.getContext('2d');
+  // ajustar canvas ao ecrã
+  const w=Math.min(640,window.innerWidth-32);
+  canvas.style.width=w+'px';
+  canvas.style.height=Math.round(w*220/640)+'px';
+  animT=0; lastTs=null;
+  const scene=SCENES[current];
+  function loop(ts){
+    if(!lastTs) lastTs=ts;
+    animT+=(ts-lastTs)/1000; lastTs=ts;
+    ctx.clearRect(0,0,640,220);
+    drawScene(ctx,scene,animT);
+    sceneLoop=requestAnimationFrame(loop);
+  }
+  sceneLoop=requestAnimationFrame(loop);
+}
+
+/* FINAL LOOP */
+function runFinal(mood){
+  stopAllLoops();
+  const canvas=document.getElementById('final-canvas');
+  const ctx=canvas.getContext('2d');
+  animT=0; lastTs=null;
+  function loop(ts){
+    if(!lastTs) lastTs=ts;
+    animT+=(ts-lastTs)/1000; lastTs=ts;
+    ctx.clearRect(0,0,200,180);
+    drawChar(ctx,100,165,{t:animT,mode:mood});
+    finalLoop=requestAnimationFrame(loop);
+  }
+  finalLoop=requestAnimationFrame(loop);
+}
+
+/* ═══════════════════════════════════════════════════════
+   NAVEGAÇÃO
+═══════════════════════════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame(){
+  current=0; score=0; answered=false;
+  showScreen('screen-scene');
+  renderScene();
+}
+
+function restartGame(){
+  current=0; score=0; answered=false;
+  showScreen('screen-scene');
+  renderScene();
+}
+
+function renderScene(){
+  answered=false;
+  const s=SCENES[current];
+  document.getElementById('hud-label').textContent=`Cena ${current+1} / ${SCENES.length}`;
+  document.getElementById('hud-score').textContent=`${score} pts`;
+  document.getElementById('pbar').style.width=`${(current/SCENES.length)*100}%`;
+  document.getElementById('scene-title').textContent=s.title;
+  document.getElementById('bubble').textContent=s.speech;
+  document.getElementById('source').textContent=`Fonte: ${s.source}`;
+  const ch=document.getElementById('choices');
+  ch.innerHTML='';
+  s.choices.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.className='choice'; btn.textContent=c.t;
+    btn.onclick=()=>selectChoice(i); ch.appendChild(btn);
+  });
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('next-wrap').style.display='none';
+  const card=document.getElementById('scene-card');
+  card.style.opacity=0;
+  requestAnimationFrame(()=>{ card.style.transition='opacity .3s'; card.style.opacity=1; });
+  runScene();
+}
+
+function selectChoice(idx){
+  if(answered) return; answered=true;
+  const s=SCENES[current];
+  const btns=document.querySelectorAll('.choice');
+  const correct=s.choices[idx].c;
+  btns.forEach((b,i)=>{ b.disabled=true; if(s.choices[i].c) b.classList.add('ok'); else if(i===idx&&!correct) b.classList.add('no'); });
+  if(correct) score+=10;
+  const fb=document.getElementById('feedback');
+  fb.className=`feedback show ${correct?'ok':'no'}`;
+  fb.textContent=correct?s.ok:s.no;
+  document.getElementById('hud-score').textContent=`${score} pts`;
+  const nw=document.getElementById('next-wrap');
+  nw.style.display='block';
+  nw.querySelector('button').textContent=current<SCENES.length-1?'Próxima →':'Ver resultado →';
+}
+
+function nextScene(){
+  current++;
+  if(current>=SCENES.length){ showFinal(); return; }
+  renderScene();
+}
+
+function showFinal(){
+  showScreen('screen-final');
+  document.getElementById('final-pts').textContent=score;
+  let title,msg,mood;
+  if(score>=70){ title='Conheces Montalegre de Verdade!'; msg='Tens os dados na ponta da língua. Montalegre precisa de vozes assim — que conheçam a realidade e exijam mais do que festas e cortes de fita.'; mood='nervous'; }
+  else if(score>=40){ title='Sabes mais do que a Presidente!'; msg='Meio caminho andado. Com mais curiosidade sobre os indicadores reais, tornas-te numa voz que ninguém ignora.'; mood='wave'; }
+  else { title='A Presidente agradece a tua confiança!'; msg='Com menos pontos do que festas no calendário autárquico, talvez valha a pena mergulhar nos dados reais de Montalegre. A realidade é mais urgente do que parece.'; mood='dance'; }
+  document.getElementById('final-title').textContent=title;
+  document.getElementById('final-msg').textContent=msg;
+  const shareMsg=`Fiz o quiz "A Presidente em Festa" da JSD Montalegre — ${score}/90 pontos. Conheces a realidade do teu concelho? Experimenta!`;
+  document.getElementById('share-preview').textContent=`"${shareMsg}"`;
+  document.getElementById('share-preview').dataset.msg=shareMsg;
+  runFinal(mood);
+}
+
+function doWhatsApp(){
+  const msg=(document.getElementById('share-preview').dataset.msg||'')+'\n'+window.location.href;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+function doCopy(){
+  const msg=(document.getElementById('share-preview').dataset.msg||'')+'\n'+window.location.href;
+  navigator.clipboard.writeText(msg).then(()=>{ const t=document.getElementById('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); });
+}
+
+/* ARRANQUE */
+runIntro();
+</script>
+</body>
+</html>
