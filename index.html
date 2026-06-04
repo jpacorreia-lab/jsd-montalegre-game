@@ -15,7 +15,7 @@ canvas{display:block;width:100%;}
 
 #s-intro{background:var(--or);position:relative;overflow:hidden;text-align:center;}
 .intro-inner{position:relative;z-index:2;max-width:480px;display:flex;flex-direction:column;align-items:center;}
-.jsd-logo-txt{font-family:'Bebas Neue',cursive;font-size:1.1rem;color:var(--am);letter-spacing:3px;margin-bottom:6px;}
+.jsd-logo-txt{font-family:'Bebas Neue',cursive;font-size:clamp(2.2rem,7vw,3rem);color:var(--am);letter-spacing:8px;margin-bottom:0;text-shadow:2px 2px 0 rgba(0,0,0,.25);}
 .intro-title{font-family:'Bebas Neue',cursive;font-size:clamp(3rem,10vw,5rem);color:var(--wh);line-height:1;text-shadow:3px 3px 0 rgba(0,0,0,.2);margin-bottom:4px;}
 .intro-title span{color:var(--am);}
 .intro-hook{background:rgba(0,0,0,.18);border-radius:12px;padding:10px 16px;color:var(--wh);font-size:.9rem;font-weight:700;margin:10px 0 6px;max-width:360px;line-height:1.5;}
@@ -260,6 +260,29 @@ function char(c,x,y,t,mode){
     c.beginPath();c.ellipse(0,-63,7,6,0,0,PI*2);c.fillStyle=JSD.red;c.fill();
   }
   c.restore();c.restore();
+}
+
+/* ══ LOGO JSD (símbolo real do manual) ══ */
+function drawJSDLogo(c,x,y,scale){
+  c.save();c.translate(x,y);c.scale(scale,scale);
+  /* arco preto (sweep) */
+  c.beginPath();c.moveTo(-60,28);c.quadraticCurveTo(-10,52,50,-28);
+  c.strokeStyle='#000';c.lineWidth=10;c.lineCap='round';c.stroke();
+  /* seta no topo do arco */
+  c.save();c.translate(50,-28);c.rotate(deg(-40));
+  c.beginPath();c.moveTo(0,0);c.lineTo(-14,0);c.moveTo(0,0);c.lineTo(0,14);
+  c.strokeStyle='#000';c.lineWidth=10;c.lineCap='round';c.stroke();
+  c.restore();
+  /* meia-lua preta */
+  c.beginPath();c.arc(-46,8,22,deg(310),deg(130));
+  c.strokeStyle='#000';c.lineWidth=10;c.lineCap='round';c.stroke();
+  /* JSD texto */
+  c.fillStyle='#000';c.font='bold 36px Bebas Neue,cursive';c.textAlign='left';
+  c.fillText('JSD',-28,18);
+  /* JUVENTUDE SOCIAL DEMOCRATA pequeno */
+  c.fillStyle='#000';c.font='bold 7px Nunito,sans-serif';c.textAlign='left';
+  c.fillText('JUVENTUDE SOCIAL DEMOCRATA',-60,40);
+  c.restore();
 }
 
 function jsdDeco(c,W,H,t,col){
